@@ -1,5 +1,5 @@
 <devGroup group="Auxiliary">
-	<device label="Arduino Cap">
+	<device label="Arduino Cap" manufacturer="Arduino Cap">
         <driver name="Arduino Cap">indi_arduino_cap</driver>
         <version>0.1</version>
 	</device>
