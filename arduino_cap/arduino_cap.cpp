@@ -115,7 +115,7 @@ bool ArduinoCap::initProperties()
     /************************************************************************************
     * Calibration Tab
     * ***********************************************************************************/
-    IUFillNumber(&ServoIDN[0], "SERVO_ID", "set servo id (0-7)", "%6.0f", 0, 6, 1, 0);
+    IUFillNumber(&ServoIDN[0], "SERVO_ID", "set servo id (0-9)", "%6.0f", 0, 9, 1, 0);
     IUFillNumberVector(&ServoIDNP, ServoIDN, 1, getDeviceName(), "SERVO_ID",
             "Servo ID", CALIB_TAB, IP_RW, 60, IPS_OK);
 
