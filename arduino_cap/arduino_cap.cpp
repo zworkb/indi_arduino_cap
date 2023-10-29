@@ -68,7 +68,7 @@ void ISSnoopDevice(XMLEle *root)
 
 ArduinoCap::ArduinoCap() : LightBoxInterface(this, false)
 {
-    setVersion(0,1);
+    setVersion(0,2);
     // Initialize all vars for predictable behavior.
     isConnecting = true;
     isMoving = false;
@@ -133,6 +133,20 @@ bool ArduinoCap::initProperties()
     IUFillNumberVector(&ServoLimitNP, ServoLimitN, 2, getDeviceName(), "ROOF_PREFERED_LIMITS",
             "Prefered Limits", CALIB_TAB, IP_RW, 60, IPS_OK);
 
+    // fields for second pin
+    // the servo id
+    IUFillNumber(&Servo2IDN[0], "SERVO_ID 2", "set servo id 2(0-9)", "%6.0f", 0, 9, 1, 0);
+    IUFillNumberVector(&Servo2IDNP, Servo2IDN, 1, getDeviceName(), "SERVO_ID 2",
+            "Servo ID 2", CALIB_TAB, IP_RW, 60, IPS_OK);
+
+    // the travel limits e.g. (0,140)
+    IUFillNumber(&Servo2TravelN[0], "LIMIT_OPEN 2", "set open travel (degrees) for second motor", "%6.0f", 0, 180, 1, 140);
+    IUFillNumber(&Servo2TravelN[1], "LIMIT_CLOSE 2", "set close travel (degrees) for second motor", "%6.0f", 0, 180, 1, 40);
+    IUFillNumberVector(&Servo2TravelNP, ServoTravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS 2",
+            "Max travel Limits for cover 2", CALIB_TAB, IP_RW, 60, IPS_OK);
+
+
+
     setDriverInterface(AUX_INTERFACE | DUSTCAP_INTERFACE | LIGHTBOX_INTERFACE);
     addDebugControl();
     addSimulationControl();
@@ -191,6 +205,9 @@ bool ArduinoCap::updateProperties()
         defineProperty(&LightSwitchNP);
         defineProperty(&ServoTravelNP);
         defineProperty(&ServoLimitNP);
+
+        defineProperty(&Servo2IDNP);
+        defineProperty(&Servo2TravelNP);
     }
     else
     {
@@ -209,6 +226,10 @@ bool ArduinoCap::updateProperties()
         deleteProperty(LightSwitchNP.name);
         deleteProperty(ServoTravelNP.name);
         deleteProperty(ServoLimitNP.name);
+
+        deleteProperty(Servo2IDNP.name);
+        deleteProperty(Servo2TravelNP.name);
+
     }
 
     return true;
@@ -360,6 +381,10 @@ bool ArduinoCap::saveConfigItems(FILE *fp)
     IUSaveConfigText(fp, &DevicePathTP);
     IUSaveConfigNumber(fp, &ServoTravelNP);
     IUSaveConfigNumber(fp, &ServoLimitNP);
+
+    // IUSaveConfigNumber(fp, &Servo2IDN);
+    IUSaveConfigNumber(fp, &Servo2TravelNP);
+    // IUSaveConfigNumber(fp, &Servo2TravelFlip)
     return true;
 }
 
