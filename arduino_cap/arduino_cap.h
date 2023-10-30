@@ -118,12 +118,16 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     INumber ServoLimitN[2];
 
     // Second servo
+    ISwitchVectorProperty HasSecondServoSNP;
+    ISwitch HasSecondServoS[1];
+
     INumberVectorProperty Servo2IDNP;
     INumber Servo2IDN[1];
 
     INumberVectorProperty Servo2TravelNP;
     INumber Servo2TravelN[2];
     INumber Servo2TravelFlip[1];
+
 
 };
 #endif

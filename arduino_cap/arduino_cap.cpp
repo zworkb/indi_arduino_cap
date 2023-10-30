@@ -134,17 +134,21 @@ bool ArduinoCap::initProperties()
             "Prefered Limits", CALIB_TAB, IP_RW, 60, IPS_OK);
 
     // fields for second pin
+    // the travel limits e.g. (0,140)
+    IUFillSwitch(&HasSecondServoS[0], "SECOND_SERVO", "has second servo (for guide scope)", ISS_OFF);
+    IUFillSwitchVector(&HasSecondServoSNP, HasSecondServoS, NARRAY(HasSecondServoS), getDeviceName(), "HAS_SECOND_SERVO",
+                       "Has Second Servo", CALIB_TAB, IP_RW, ISR_ATMOST1, 0, IPS_IDLE);
+
     // the servo id
     IUFillNumber(&Servo2IDN[0], "SERVO_ID 2", "set servo id 2(0-9)", "%6.0f", 0, 9, 1, 0);
     IUFillNumberVector(&Servo2IDNP, Servo2IDN, 1, getDeviceName(), "SERVO_ID 2",
             "Servo ID 2", CALIB_TAB, IP_RW, 60, IPS_OK);
 
-    // the travel limits e.g. (0,140)
+    
     IUFillNumber(&Servo2TravelN[0], "LIMIT_OPEN 2", "set open travel (degrees) for second motor", "%6.0f", 0, 180, 1, 140);
     IUFillNumber(&Servo2TravelN[1], "LIMIT_CLOSE 2", "set close travel (degrees) for second motor", "%6.0f", 0, 180, 1, 40);
     IUFillNumberVector(&Servo2TravelNP, ServoTravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS 2",
             "Max travel Limits for cover 2", CALIB_TAB, IP_RW, 60, IPS_OK);
-
 
 
     setDriverInterface(AUX_INTERFACE | DUSTCAP_INTERFACE | LIGHTBOX_INTERFACE);
@@ -206,8 +210,10 @@ bool ArduinoCap::updateProperties()
         defineProperty(&ServoTravelNP);
         defineProperty(&ServoLimitNP);
 
+        defineProperty(&HasSecondServoSNP);
         defineProperty(&Servo2IDNP);
         defineProperty(&Servo2TravelNP);
+
     }
     else
     {
@@ -227,6 +233,7 @@ bool ArduinoCap::updateProperties()
         deleteProperty(ServoTravelNP.name);
         deleteProperty(ServoLimitNP.name);
 
+        deleteProperty(HasSecondServoSNP.name);
         deleteProperty(Servo2IDNP.name);
         deleteProperty(Servo2TravelNP.name);
 
