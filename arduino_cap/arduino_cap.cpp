@@ -68,7 +68,7 @@ void ISSnoopDevice(XMLEle *root)
 
 ArduinoCap::ArduinoCap() : LightBoxInterface(this, false)
 {
-    setVersion(0,2);
+    setVersion(0,3);
     // Initialize all vars for predictable behavior.
     isConnecting = true;
     isMoving = false;
@@ -141,13 +141,17 @@ bool ArduinoCap::initProperties()
 
     // the servo id
     IUFillNumber(&Servo2IDN[0], "SERVO_ID 2", "set servo id 2(0-9)", "%6.0f", 0, 9, 1, 0);
-    IUFillNumberVector(&Servo2IDNP, Servo2IDN, 1, getDeviceName(), "SERVO_ID 2",
+    IUFillNumberVector(&Servo2IDNP, Servo2IDN, 1, getDeviceName(), "SERVO_ID_2",
             "Servo ID 2", CALIB_TAB, IP_RW, 60, IPS_OK);
 
+    // servo 2 delay
+    IUFillNumber(&Servo2DelayN[0], "SERVO_ID 2", "set servo delay in seconds 2(0-20)", "%6.0f", 0, 20, 1, 0);
+    IUFillNumberVector(&Servo2DelayNP, Servo2DelayN, 1, getDeviceName(), "SERVO_DELAY_2",
+            "Servo 2 delay", CALIB_TAB, IP_RW, 60, IPS_OK);
     
     IUFillNumber(&Servo2TravelN[0], "LIMIT_OPEN 2", "set open travel (degrees) for second motor", "%6.0f", 0, 180, 1, 140);
     IUFillNumber(&Servo2TravelN[1], "LIMIT_CLOSE 2", "set close travel (degrees) for second motor", "%6.0f", 0, 180, 1, 40);
-    IUFillNumberVector(&Servo2TravelNP, ServoTravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS 2",
+    IUFillNumberVector(&Servo2TravelNP, Servo2TravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS_2",
             "Max travel Limits for cover 2", CALIB_TAB, IP_RW, 60, IPS_OK);
 
 
@@ -210,9 +214,12 @@ bool ArduinoCap::updateProperties()
         defineProperty(&ServoTravelNP);
         defineProperty(&ServoLimitNP);
 
+        // second servo (optional)
         defineProperty(&HasSecondServoSNP);
         defineProperty(&Servo2IDNP);
         defineProperty(&Servo2TravelNP);
+        defineProperty(&Servo2DelayNP);
+        // defineProperty(&Servo2LimitNP);
 
     }
     else
@@ -236,6 +243,7 @@ bool ArduinoCap::updateProperties()
         deleteProperty(HasSecondServoSNP.name);
         deleteProperty(Servo2IDNP.name);
         deleteProperty(Servo2TravelNP.name);
+        deleteProperty(Servo2DelayNP.name);
 
     }
 
@@ -312,6 +320,25 @@ bool ArduinoCap::ISNewNumber(const char *dev, const char *name, double values[],
         {
             updateNP = &ServoLimitNP;
         }
+        // second servo
+        else if (strcmp(name, Servo2TravelNP.name)==0)
+        {
+            updateNP = &Servo2TravelNP;
+        }
+        else if (strcmp(name, Servo2IDNP.name)==0)
+        {
+            updateNP = &Servo2IDNP;
+        }
+        else if (strcmp(name, HasSecondServoSNP.name)==0)
+        {
+        //     updateNP = &HasSecondServoSNP;
+            // ISwitchVectorProperty;
+        }
+        else if (strcmp(name, Servo2DelayNP.name)==0)
+        {
+            updateNP = &Servo2DelayNP;
+        }
+
 
         if (updateNP != NULL)
         {
@@ -389,9 +416,9 @@ bool ArduinoCap::saveConfigItems(FILE *fp)
     IUSaveConfigNumber(fp, &ServoTravelNP);
     IUSaveConfigNumber(fp, &ServoLimitNP);
 
-    // IUSaveConfigNumber(fp, &Servo2IDN);
+    IUSaveConfigNumber(fp, &Servo2IDNP);
     IUSaveConfigNumber(fp, &Servo2TravelNP);
-    // IUSaveConfigNumber(fp, &Servo2TravelFlip)
+    IUSaveConfigNumber(fp, &Servo2DelayNP);
     return true;
 }
 

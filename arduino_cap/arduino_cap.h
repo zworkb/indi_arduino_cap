@@ -121,6 +121,9 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     ISwitchVectorProperty HasSecondServoSNP;
     ISwitch HasSecondServoS[1];
 
+    INumberVectorProperty Servo2DelayNP;
+    INumber Servo2DelayN[1];
+
     INumberVectorProperty Servo2IDNP;
     INumber Servo2IDN[1];
 
