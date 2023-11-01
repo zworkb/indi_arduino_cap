@@ -154,6 +154,9 @@ bool ArduinoCap::initProperties()
     IUFillNumberVector(&Servo2TravelNP, Servo2TravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS_2",
             "Max travel Limits for cover 2", CALIB_TAB, IP_RW, 60, IPS_OK);
 
+    IUFillNumber(&AbsolutePos2N[0], "ABS_POS_2", "abs position servo 2 (degree)", "%6.2f", 0, 180, 1, 0);
+    IUFillNumberVector(&AbsolutePos2NP, AbsolutePos2N, 1, getDeviceName(), "ABSOLUTE_POSITION_2",
+            "Servo position 2", MAIN_CONTROL_TAB, IP_RO, 60, IPS_IDLE);
 
     setDriverInterface(AUX_INTERFACE | DUSTCAP_INTERFACE | LIGHTBOX_INTERFACE);
     addDebugControl();
@@ -219,6 +222,8 @@ bool ArduinoCap::updateProperties()
         defineProperty(&Servo2IDNP);
         defineProperty(&Servo2TravelNP);
         defineProperty(&Servo2DelayNP);
+        defineProperty(&AbsolutePos2NP);
+
         // defineProperty(&Servo2LimitNP);
 
     }
@@ -244,6 +249,7 @@ bool ArduinoCap::updateProperties()
         deleteProperty(Servo2IDNP.name);
         deleteProperty(Servo2TravelNP.name);
         deleteProperty(Servo2DelayNP.name);
+        deleteProperty(AbsolutePos2NP.name);
 
     }
 
@@ -329,11 +335,6 @@ bool ArduinoCap::ISNewNumber(const char *dev, const char *name, double values[],
         {
             updateNP = &Servo2IDNP;
         }
-        else if (strcmp(name, HasSecondServoSNP.name)==0)
-        {
-        //     updateNP = &HasSecondServoSNP;
-            // ISwitchVectorProperty;
-        }
         else if (strcmp(name, Servo2DelayNP.name)==0)
         {
             updateNP = &Servo2DelayNP;
@@ -398,6 +399,18 @@ bool ArduinoCap::ISNewSwitch(const char *dev, const char *name, ISState *states,
                 deleteProperty(LightSP.name);
             return true;
         }
+        else if (strcmp(name, HasSecondServoSNP.name)==0)
+        {
+            ISwitchVectorProperty *prop = &HasSecondServoSNP;
+            IUUpdateSwitch(&HasSecondServoSNP, states, names, n);
+            IDSetSwitch(&HasSecondServoSNP, NULL);
+            DEBUGF(INDI::Logger::DBG_DEBUG,"process hasServo2 %d", HasSecondServoS[0]);
+
+
+            defineProperty(&HasSecondServoSNP);
+            return true;
+        }
+
     }
     return INDI::DefaultDevice::ISNewSwitch(dev, name, states, names, n);
 }
@@ -419,6 +432,7 @@ bool ArduinoCap::saveConfigItems(FILE *fp)
     IUSaveConfigNumber(fp, &Servo2IDNP);
     IUSaveConfigNumber(fp, &Servo2TravelNP);
     IUSaveConfigNumber(fp, &Servo2DelayNP);
+    IUSaveConfigSwitch(fp, &HasSecondServoSNP);
     return true;
 }
 
@@ -502,6 +516,7 @@ bool ArduinoCap::MoveToABS(double moveTo)
 bool ArduinoCap::DoMove()
 {
     // DoMove. Used by park / unpark, and move step open / close.
+
     if (isMoving)
     {
         double servoIs = AbsolutePosN[0].value;

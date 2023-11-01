@@ -131,6 +131,8 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     INumber Servo2TravelN[2];
     INumber Servo2TravelFlip[1];
 
+    INumberVectorProperty AbsolutePos2NP;
+    INumber AbsolutePos2N[1];
 
 };
 #endif
