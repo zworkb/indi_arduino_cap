@@ -34,7 +34,6 @@ void ISGetProperties(const char *dev)
 {
     arduino_cap->ISGetProperties(dev);
 }
-
 void ISNewSwitch(const char *dev, const char *name, ISState *states, char *names[], int num)
 {
     arduino_cap->ISNewSwitch(dev, name, states, names, num);
@@ -68,13 +67,14 @@ void ISSnoopDevice(XMLEle *root)
 
 ArduinoCap::ArduinoCap() : LightBoxInterface(this, false)
 {
-    setVersion(0,3);
+    setVersion(0,4);
     // Initialize all vars for predictable behavior.
     isConnecting = true;
     isMoving = false;
     isMoveStep = false;
     isClosing = false;
     moveToABS = 0;
+    moveToABS2 = 0;
 }
 
 ArduinoCap::~ArduinoCap()
@@ -438,31 +438,50 @@ bool ArduinoCap::saveConfigItems(FILE *fp)
 
 IPState ArduinoCap::ParkCap()
 {    
-    double absAtStart = AbsolutePosN[0].value;
+    // double absAtStart = AbsolutePosN[0].value;
     isClosing = true;
+    LOG_INFO("do parking");
 
     IUResetSwitch(&ParkCapSP);
     ParkCapS[0].s = ISS_ON;
     ParkCapSP.s = IPS_BUSY;
     IDSetSwitch(&ParkCapSP, NULL);
 
-    if (!isConnecting && Move())
-        return IPS_OK;
+    if (HasSecondServoS[0].s){
+        LOG_INFO("having second servo");
+        if (!isConnecting && Move() && Move2())
+            return IPS_OK;
+    }
+    else {
+        LOG_INFO("not having second servo");
+        if (!isConnecting && Move())
+            return IPS_OK;
+        }
     return IPS_BUSY;
 }
 
 IPState ArduinoCap::UnParkCap()
 {
-    double absAtStart = AbsolutePosN[0].value;
+    // double absAtStart = AbsolutePosN[0].value;
     isClosing = false;
+    LOG_INFO("do unparking");
 
     IUResetSwitch(&ParkCapSP);
     ParkCapS[1].s = ISS_ON;
     ParkCapSP.s = IPS_BUSY;
     IDSetSwitch(&ParkCapSP, NULL);
 
-    if (!isConnecting && Move())
-        return IPS_OK;
+    if (HasSecondServoS[0].s){
+        LOG_INFO("having second servo");
+        if (!isConnecting && Move() && Move2())
+            return IPS_OK;
+    }
+    else {
+        LOG_INFO("not having second servo");
+        if (!isConnecting && Move()){
+            return IPS_OK;
+        }
+    }
     return IPS_BUSY;
 }
 
@@ -534,6 +553,8 @@ bool ArduinoCap::DoMove()
                 + " "
                 + std::to_string(static_cast<int>(servoIs))
                 + ";echo $?";
+
+            LOGF_INFO("DoMove cmd (isMoving false): %s", cmd.c_str());
             if (!INDI::DefaultDevice::isSimulation())
             {
                 int res = PopenInt(cmd.c_str());
@@ -562,6 +583,8 @@ bool ArduinoCap::DoMove()
                 + " "
                 + std::to_string(static_cast<int>(moveToABS))
                 + ";echo $?";
+            LOGF_INFO("DoMove cmd (isMoving true): %s", cmd.c_str());
+
             if (!INDI::DefaultDevice::isSimulation())
             {
                 int res = PopenInt(cmd.c_str());
@@ -573,6 +596,118 @@ bool ArduinoCap::DoMove()
                 {
                     DEBUGF(INDI::Logger::DBG_DEBUG, "*****Moving servo to ABS with CMD: %s", cmd.c_str());
                     setABS(moveToABS);
+                }
+            }
+            isMoving = false;
+        }
+
+        if (!isMoving && !isMoveStep)
+            SetOKParkStatus();
+        if (!isMoving)
+            isMoveStep = false;
+    }
+    return true;
+}
+// second servo
+
+
+bool ArduinoCap::Move2()
+{
+    // Initialize limit, steps and start TimerHit to prak or unpark cap.
+    double absAtStart = AbsolutePos2N[0].value;
+    moveToABS2 = getFullABS2(isClosing);
+    isMoving = true;
+
+    // No need to have external light on when closing cap.
+    if (isClosing)
+    {
+        ISState *states;
+        ISState s[2] = {ISS_OFF, ISS_ON};
+        states = s;
+        char *names[2] = {strdup("FLAT_LIGHT_ON"), strdup("FLAT_LIGHT_OFF")};
+        ISNewSwitch(getDeviceName(), LightSP.name, states, names, 2);
+    }
+
+    DEBUGF(INDI::Logger::DBG_SESSION, "%s from %6.2f, to %6.2f"
+            , isClosing ? "Closing" : "Opening", absAtStart, moveToABS2);
+    return DoMove2();
+}
+
+bool ArduinoCap::MoveToABS2(double moveTo)
+{
+    moveToABS2 = moveTo;
+    isMoving = true;
+    isMoveStep = true;
+
+    DEBUGF(INDI::Logger::DBG_SESSION, "Setting servo to %6.2f wihout interpolation"
+            , moveToABS2);
+    return DoMove2();
+}
+
+bool ArduinoCap::DoMove2()
+{
+    // DoMove. Used by park / unpark, and move step open / close.
+
+    if (isMoving)
+    {
+        double servoIs = AbsolutePos2N[0].value;
+        std::string usbComDev = DevicePathT[0].text; 
+        double servoID = Servo2IDN[0].value;
+        if (!isMoveStep)
+        {
+            // Servo move cmd string
+            std::string cmd = "/usr/bin/arduino_servo.py "
+                + usbComDev 
+                + " "
+                + std::to_string(static_cast<int>(servoID))
+                + " " 
+                + std::to_string(static_cast<int>(moveToABS2))
+                + " "
+                + std::to_string(static_cast<int>(servoIs))
+                + ";echo $?";
+
+            LOGF_INFO("DoMove2 cmd (isMoving false): %s", cmd.c_str());
+            if (!INDI::DefaultDevice::isSimulation())
+            {
+                int res = PopenInt(cmd.c_str());
+                if (res != 0)
+                {
+                    DEBUGF(INDI::Logger::DBG_ERROR, "Moving servo failed. Attempted cmd was: %s", cmd.c_str());
+                    return false;
+                }
+                else 
+                {
+                    DEBUGF(INDI::Logger::DBG_DEBUG, "*****Moving servo to interpolated with CMD: %s", cmd.c_str());
+                    setABS2(moveToABS2);
+                }
+            }
+            isMoving = false;
+        }
+        else
+        {
+            // Servo move cmd string
+            std::string cmd = "/usr/bin/arduino_servo.py "
+                + usbComDev 
+                + " "
+                + std::to_string(static_cast<int>(servoID))
+                + " " 
+                + std::to_string(static_cast<int>(moveToABS2))
+                + " "
+                + std::to_string(static_cast<int>(moveToABS2))
+                + ";echo $?";
+            LOGF_INFO("DoMove2 cmd (isMoving true): %s", cmd.c_str());
+
+            if (!INDI::DefaultDevice::isSimulation())
+            {
+                int res = PopenInt(cmd.c_str());
+                if (res != 0)
+                {
+                     DEBUGF(INDI::Logger::DBG_ERROR, "Moving servo failed. Attempted cmd was: %s", cmd.c_str());
+                }
+                else 
+                {
+                    DEBUGF(INDI::Logger::DBG_DEBUG, "*****Moving servo to ABS with CMD: %s", cmd.c_str());
+                    setABS2(moveToABS2);
                 }
             }
             isMoving = false;
@@ -676,6 +811,41 @@ void ArduinoCap::setABS(double pos)
     AbsolutePosNP.s = IPS_OK;
     IDSetNumber(&AbsolutePosNP, NULL);
 }
+
+// for secondary servo
+double ArduinoCap::getFullABS2(bool closed)
+{
+    // Get the fully open or fully closed position for our calibration.
+    // No chance of reading physical servo position, so abs position is always calculated.
+    double pos;
+    double first = Servo2TravelN[0].value;
+    double second = Servo2TravelN[1].value;
+
+    if (!closed)
+        if (first > second)
+            pos = Servo2TravelN[0].value * (ServoLimitN[0].value / 100);
+        else
+            pos = Servo2TravelN[0].value * (1 + (100 - ServoLimitN[0].value) / 100);
+    else
+        if (first > second)
+            pos = Servo2TravelN[1].value * (1 + (100 - ServoLimitN[1].value) / 100);
+        else
+            pos = Servo2TravelN[1].value * (ServoLimitN[1].value / 100);
+
+    DEBUGF(INDI::Logger::DBG_DEBUG, "*****getFullABS, closed %s, pos %6.2f"
+            , closed ? "true" : "false", pos);
+    return pos;
+}
+
+
+void ArduinoCap::setABS2(double pos)
+{
+    // Update the abs position when moving or initializing on connect.
+    AbsolutePos2N[0].value = pos;
+    AbsolutePos2NP.s = IPS_OK;
+    IDSetNumber(&AbsolutePos2NP, NULL);
+}
+
 
 int ArduinoCap::PopenInt(const char* cmd)
 {

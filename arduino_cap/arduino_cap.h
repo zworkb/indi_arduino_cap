@@ -74,6 +74,7 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     bool isMoveStep;
     bool isClosing;
     double moveToABS;
+    double moveToABS2;
     Parkdata parkData;
 
     void SetupParams();
@@ -83,6 +84,14 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     bool DoMove();
     double getFullABS(bool closed);
     void setABS(double pos);
+    // for second servo:
+    bool Move2();
+    bool MoveToABS2(double toMove);
+    bool DoMove2();
+    double getFullABS2(bool closed);
+    void setABS2(double pos);
+
+
     int PopenInt(const char* cmd);
 
     // Main tab
