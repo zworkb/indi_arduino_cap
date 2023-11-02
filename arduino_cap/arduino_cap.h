@@ -90,6 +90,9 @@ class ArduinoCap : public INDI::DefaultDevice, public INDI::DustCapInterface, pu
     bool DoMove2();
     double getFullABS2(bool closed);
     void setABS2(double pos);
+    bool hasSecondServo() {
+      return HasSecondServoS[0].s;
+    }
 
 
     int PopenInt(const char* cmd);
