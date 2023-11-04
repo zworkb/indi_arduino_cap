@@ -13,6 +13,13 @@ You can also (optionally) install USBRelay2 Roof, and use a relay channel as a (
 * Some files have additional lisence information, see file headers.
 
 ### Installing dependencies
+
+If you are using a complete astro distro like astroberry, stellarmate or AstroArch, all kstars and INDI stuff is preinstalled, so that you probably only have to install header files so that you can compile
+the driver.
+
+Otherwise you have to install all stuff depending on your operating system.
+Generally you need the following software components:
+
 1. **INDILib, and it's dependencies**
     * To build libindi from source [see instructions on indilib.org](http://www.indilib.org/forum/general/210-howto-building-latest-libindi-ekos.html "Link to build libindi")
 
@@ -23,16 +30,17 @@ You can also (optionally) install USBRelay2 Roof, and use a relay channel as a (
     * To build USBRelay2 Roof from source [see instructions on github](http://github.com/magnue/indi_usbrelay2_roof "Link to build USBRelay2 Roof")
 
 ### Install INDI Arduino Cap
-#### On an astro distro like stellarmate
 
-##### System preparation
+the following steps describe the installation on a Raspberry with stellarmate.
+
+#### System preparation
 
 ```bash
 sudo apt-get install -y git build-essential libindi-dev libxisf
 sudo pip3 install pyfirmata
 ```
 
-##### git clone checkout and build
+#### git clone checkout and build
 
 ```bash
 git clone https://github.com/zworkb/indi_arduino_cap.git
