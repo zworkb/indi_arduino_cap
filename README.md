@@ -35,7 +35,7 @@ sudo pip3 install pyfirmata
 ##### git clone checkout and build
 
 ```bash
-git clone https://github.com/zworkb/indi_arduino_cap.git -b dual
+git clone https://github.com/zworkb/indi_arduino_cap.git
 cd indi_arduino_cap/
 mkdir build
 cd build
