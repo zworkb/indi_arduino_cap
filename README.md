@@ -23,22 +23,39 @@ You can also (optionally) install USBRelay2 Roof, and use a relay channel as a (
     * To build USBRelay2 Roof from source [see instructions on github](http://github.com/magnue/indi_usbrelay2_roof "Link to build USBRelay2 Roof")
 
 ### Install INDI Arduino Cap
-* **Install**
-    ```
-    $ cd ~/Projects
-    $ git clone https://github.com/magnue/indi_arduino_cap.git
-    $ mkdir -p build/indi_arduino_cap
-    $ cd build/indi_arduino_cap
-    $ cmake -DCMAKE_INSTALL_PREFIX=/usr . ../../indi_arduino_cap/
-    $ sudo make install
-    ```
-* **Update**
-    ```
-    $ cd ~/Projects/indi_arduino_cap/
-    $ git pull
-    $ cd ../build/indi_arduino_cap
-    $ sudo make install
-    ```
+#### On an astro distro like stellarmate
+
+##### System preparation
+
+```bash
+sudo apt-get install -y git build-essential libindi-dev libxisf
+sudo pip3 install pyfirmata
+```
+
+##### git clone checkout and build
+
+```bash
+git clone https://github.com/zworkb/indi_arduino_cap.git -b dual
+cd indi_arduino_cap/
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr . ..
+make
+sudo make install
+```
+
+##### update and build
+
+```bash
+cd indi_arduino_cap/
+cd build
+make
+sudo make install
+```
+
+Important: when kstars is running:
+
+shudown EKOS and kstars and restart, so that the driver gets loaded
 
 ### Screenshots
 
