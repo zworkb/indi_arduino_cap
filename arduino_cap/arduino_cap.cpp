@@ -142,7 +142,7 @@ bool ArduinoCap::initProperties()
     // the servo id
     IUFillNumber(&Servo2IDN[0], "SERVO_ID 2", "set servo id 2(0-9)", "%6.0f", 0, 9, 1, 0);
     IUFillNumberVector(&Servo2IDNP, Servo2IDN, 1, getDeviceName(), "SERVO_ID_2",
-            "Servo ID 2", CALIB_TAB, IP_RW, 60, IPS_OK);
+            "Servo 2 ID", CALIB_TAB, IP_RW, 60, IPS_OK);
 
     // servo 2 delay
     IUFillNumber(&Servo2DelayN[0], "SERVO_ID 2", "set servo delay in seconds 2(0-20)", "%6.0f", 0, 20, 1, 0);
@@ -152,11 +152,11 @@ bool ArduinoCap::initProperties()
     IUFillNumber(&Servo2TravelN[0], "LIMIT_OPEN 2", "set open travel (degrees) for second motor", "%6.0f", 0, 180, 1, 140);
     IUFillNumber(&Servo2TravelN[1], "LIMIT_CLOSE 2", "set close travel (degrees) for second motor", "%6.0f", 0, 180, 1, 40);
     IUFillNumberVector(&Servo2TravelNP, Servo2TravelN, 2, getDeviceName(), "ROOF_TRAVEL_LIMITS_2",
-            "Max travel Limits for cover 2", CALIB_TAB, IP_RW, 60, IPS_OK);
+            "Limits servo 2", CALIB_TAB, IP_RW, 60, IPS_OK);
 
     IUFillNumber(&AbsolutePos2N[0], "ABS_POS_2", "abs position servo 2 (degree)", "%6.2f", 0, 180, 1, 0);
     IUFillNumberVector(&AbsolutePos2NP, AbsolutePos2N, 1, getDeviceName(), "ABSOLUTE_POSITION_2",
-            "Servo position 2", MAIN_CONTROL_TAB, IP_RO, 60, IPS_IDLE);
+            "Servo 2 position", MAIN_CONTROL_TAB, IP_RO, 60, IPS_IDLE);
 
     setDriverInterface(AUX_INTERFACE | DUSTCAP_INTERFACE | LIGHTBOX_INTERFACE);
     addDebugControl();

@@ -57,7 +57,17 @@ Important: when kstars is running:
 
 shudown EKOS and kstars and restart, so that the driver gets loaded
 
-### Screenshots
+
+
+### Usage
+
+#### Configure driver in your profile
+
+Now that we have installed the driver into the system, we have to configure into our INDI profile.
+Therefore you have to select an AUX device, our driver is registered as `Arduino Cap/Arduino Cap`.
+
+![select driver](media/indi_arduino_cap-driver_select.png)
+
 
 #### Calibrate
 * Configure Servo ID, Flat Light device, calibrate travel limits, prefered limits, and optionally reverse servo direction.
@@ -72,7 +82,7 @@ Sometimes it is useful to connect a second servo to your arduino to control the 
 and the limit parameters similarily as for the main servo.
 When you now park/unpark, both covers will be closed/opened subsequentially.
 
-![Calibrate tab image](media/indi_arduino_cap-calibrate.png)
+![Calibrate second servo](media/indi_arduino_cap-calibrate2.png)
 
 
 
