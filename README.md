@@ -66,6 +66,16 @@ shudown EKOS and kstars and restart, so that the driver gets loaded
 ![Calibrate tab image](media/indi_arduino_cap-calibrate.png)
 ![Options tab image](media/indi_arduino_cap-options.png)
 
+##### Support for secondary servo
+
+Sometimes it is useful to connect a second servo to your arduino to control the cover of your guide scope to a different pin. In this case select the option `has second servo (for guide scope)` and then select the pin (Servo 2 ID)
+and the limit parameters similarily as for the main servo.
+When you now park/unpark, both covers will be closed/opened subsequentially.
+
+![Calibrate tab image](media/indi_arduino_cap-calibrate.png)
+
+
+
 #### Main Control
 * Not much to it. Parked = closed, UnParked = open - ready to image.
 * Parking Cap will turn off lightsource, and lightsource can only be operated when Cap is unparked.
