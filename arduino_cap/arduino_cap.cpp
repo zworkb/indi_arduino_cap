@@ -65,7 +65,7 @@ void ISSnoopDevice(XMLEle *root)
     arduino_cap->ISSnoopDevice(root);
 }
 
-ArduinoCap::ArduinoCap() : LightBoxInterface(this, false)
+ArduinoCap::ArduinoCap() : DustCapInterface(this), LightBoxInterface(this)
 {
     setVersion(0,4);
     // Initialize all vars for predictable behavior.
@@ -84,6 +84,9 @@ ArduinoCap::~ArduinoCap()
 
 bool ArduinoCap::initProperties()
 {
+
+
+
     INDI::DefaultDevice::initProperties();
 
     /************************************************************************************
@@ -97,9 +100,11 @@ bool ArduinoCap::initProperties()
     IUFillNumberVector(&AbsolutePosNP, AbsolutePosN, 1, getDeviceName(), "ABSOLUTE_POSITION",
             "Servo position", MAIN_CONTROL_TAB, IP_RO, 60, IPS_IDLE);
 
-    initDustCapProperties(getDeviceName(), MAIN_CONTROL_TAB);
-    initLightBoxProperties(getDeviceName(), MAIN_CONTROL_TAB);
-
+    // initDustCapProperties(getDeviceName(), MAIN_CONTROL_TAB);
+    // initLightBoxProperties(getDeviceName(), MAIN_CONTROL_TAB);
+    DustCapInterface::initProperties(MAIN_CONTROL_TAB);    // statt initDustCapProperties()
+    LightBoxInterface::initProperties(MAIN_CONTROL_TAB, 0);   // statt initLightBoxProperties()
+    DefaultDevice::initProperties();
     /************************************************************************************
     * Options Tab
     * ***********************************************************************************/
@@ -170,22 +175,22 @@ void ArduinoCap::SetupParams()
     // Initialize the Parkdata class
     if (parkData.InitPark())
     {
-        IUResetSwitch(&ParkCapSP);
+        ParkCapSP.reset();
         // Check park status and update ParkCapSP
         if (parkData.isParked())
         {
             DEBUG(INDI::Logger::DBG_SESSION, "Parkstatus initialized to parked");
-            ParkCapS[0].s = ISS_ON;
-            ParkCapSP.s = IPS_OK;
-            IDSetSwitch(&ParkCapSP, NULL);
+            ParkCapSP[0].setState(ISS_ON);
+            ParkCapSP.setState(IPS_OK);
+            ParkCapSP.apply();
             isClosing = true;
-        } 
+        }
         else
         {
             DEBUG(INDI::Logger::DBG_SESSION, "Parkstatus initialized to unparked");
-            ParkCapS[1].s = ISS_ON;
-            ParkCapSP.s = IPS_OK;
-            IDSetSwitch(&ParkCapSP, NULL);
+            ParkCapSP[1].setState(ISS_ON);
+            ParkCapSP.setState(IPS_OK);
+            ParkCapSP.apply();
             isClosing = false;
         }
     }
@@ -203,10 +208,10 @@ bool ArduinoCap::updateProperties()
     if (isConnected())
     {
         // Main tab
-        defineProperty(&ParkCapSP);
+        defineProperty(ParkCapSP);
         defineProperty(&MoveSteppNP);
         defineProperty(&AbsolutePosNP);
-        
+
         // Options tab
         defineProperty(&LightTypeSP);
         defineProperty(&DevicePathTP);
@@ -230,8 +235,8 @@ bool ArduinoCap::updateProperties()
     else
     {
         // Main tab
-        deleteProperty(ParkCapSP.name);
-        deleteProperty(LightSP.name);
+        deleteProperty(ParkCapSP.getName());
+        deleteProperty(LightSP.getName());
         deleteProperty(MoveSteppNP.name);
         deleteProperty(AbsolutePosNP.name);
 
@@ -294,7 +299,7 @@ bool ArduinoCap::ISNewNumber(const char *dev, const char *name, double values[],
 {
     if(strcmp(dev,getDeviceName())==0)
     {
-        if (processLightBoxNumber(dev, name, values, names, n))
+        if (LightBoxInterface::processNumber(dev, name, values, names, n))
             return true;
 
         // Move in steps, useful when calibrating limits.
@@ -359,7 +364,7 @@ bool ArduinoCap::ISNewText(const char *dev, const char *name, char *texts[], cha
 {
     if(strcmp(dev,getDeviceName())==0)
     {
-        if (processLightBoxText(dev, name, texts, names, n))
+        if (LightBoxInterface::processText(dev, name, texts, names, n))
             return true;
 
         if (strcmp(name,DevicePathTP.name)==0)
@@ -377,10 +382,10 @@ bool ArduinoCap::ISNewSwitch(const char *dev, const char *name, ISState *states,
 {
     if(strcmp(dev,getDeviceName())==0)
     {
-        if (processLightBoxSwitch(dev, name, states, names, n))
+        if (LightBoxInterface::processSwitch(dev, name, states, names, n))
             return true;
 
-        if (processDustCapSwitch(dev, name, states, names, n))
+        if (DustCapInterface::processSwitch(dev, name, states, names, n))
             return true;
 
         // Update if we are using USBRelay2, or WiringPi as light source.
@@ -394,9 +399,9 @@ bool ArduinoCap::ISNewSwitch(const char *dev, const char *name, ISState *states,
                     , isUsbRelay2 ? "USBRelay2 Roof." : "No lightsource");
 
             if (isUsbRelay2 && !isConnecting)
-                defineProperty(&LightSP);
+                defineProperty(LightSP);
             else
-                deleteProperty(LightSP.name);
+                deleteProperty(LightSP.getName());
             return true;
         }
         else if (strcmp(name, HasSecondServoSNP.name)==0)
@@ -437,15 +442,15 @@ bool ArduinoCap::saveConfigItems(FILE *fp)
 }
 
 IPState ArduinoCap::ParkCap()
-{    
+{
     // double absAtStart = AbsolutePosN[0].value;
     isClosing = true;
     LOG_INFO("do parking");
 
-    IUResetSwitch(&ParkCapSP);
-    ParkCapS[0].s = ISS_ON;
-    ParkCapSP.s = IPS_BUSY;
-    IDSetSwitch(&ParkCapSP, NULL);
+    ParkCapSP.reset();
+    ParkCapSP[0].setState(ISS_ON);
+    ParkCapSP.setState(IPS_BUSY);
+    ParkCapSP.apply();
 
     if (HasSecondServoS[0].s){
         LOG_INFO("having second servo");
@@ -466,10 +471,10 @@ IPState ArduinoCap::UnParkCap()
     isClosing = false;
     LOG_INFO("do unparking");
 
-    IUResetSwitch(&ParkCapSP);
-    ParkCapS[1].s = ISS_ON;
-    ParkCapSP.s = IPS_BUSY;
-    IDSetSwitch(&ParkCapSP, NULL);
+    ParkCapSP.reset();
+    ParkCapSP[1].setState(ISS_ON);
+    ParkCapSP.setState(IPS_BUSY);
+    ParkCapSP.apply();
 
     if (HasSecondServoS[0].s){
         LOG_INFO("having second servo");
@@ -488,13 +493,13 @@ IPState ArduinoCap::UnParkCap()
 void ArduinoCap::SetOKParkStatus()
 {
     // Update park status after TimerHit has completed.
-    IUResetSwitch(&ParkCapSP);
+    ParkCapSP.reset();
     if (isClosing)
-        ParkCapS[0].s = ISS_ON;
+        ParkCapSP[0].setState(ISS_ON);
     else
-        ParkCapS[1].s = ISS_ON;
-    ParkCapSP.s = IPS_OK;
-    IDSetSwitch(&ParkCapSP, NULL);
+        ParkCapSP[1].setState(ISS_ON);
+    ParkCapSP.setState(IPS_OK);
+    ParkCapSP.apply();
 
     parkData.SetParked(isClosing);
 }
@@ -513,7 +518,7 @@ bool ArduinoCap::Move()
         ISState s[2] = {ISS_OFF, ISS_ON};
         states = s;
         char *names[2] = {strdup("FLAT_LIGHT_ON"), strdup("FLAT_LIGHT_OFF")};
-        ISNewSwitch(getDeviceName(), LightSP.name, states, names, 2);
+        ISNewSwitch(getDeviceName(), LightSP.getName(), states, names, 2);
     }
 
     DEBUGF(INDI::Logger::DBG_SESSION, "%s from %6.2f, to %6.2f"
@@ -625,7 +630,7 @@ bool ArduinoCap::Move2()
         ISState s[2] = {ISS_OFF, ISS_ON};
         states = s;
         char *names[2] = {strdup("FLAT_LIGHT_ON"), strdup("FLAT_LIGHT_OFF")};
-        ISNewSwitch(getDeviceName(), LightSP.name, states, names, 2);
+        ISNewSwitch(getDeviceName(), LightSP.getName(), states, names, 2);
     }
 
     DEBUGF(INDI::Logger::DBG_SESSION, "%s from %6.2f, to %6.2f"
@@ -773,7 +778,7 @@ void ArduinoCap::TimerHit()
     {
         setABS(getFullABS(isClosing));
         if (LightTypeS[0].s == ISS_ON)
-            defineProperty(&LightSP);
+            defineProperty(LightSP);
         
         isConnecting = false;
         return;
