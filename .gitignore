@@ -1,1 +1,42 @@
+# Build directories
 /build
+/build-*/
+/cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled binaries
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.bak
+*.tmp
+*.log
+
+# INDI driver binary
+indi_arduino_cap
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Package files
+*.deb
+*.rpm
+*.tar.gz

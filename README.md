@@ -37,7 +37,7 @@ the following steps describe the installation on a Raspberry with stellarmate.
 
 ```bash
 sudo apt-get install -y git build-essential libindi-dev libxisf
-sudo pip3 install pyfirmata
+sudo pip3 install git+https://github.com/tino/pyFirmata.git
 ```
 
 #### git clone checkout and build
@@ -65,7 +65,27 @@ Important: when kstars is running:
 
 shudown EKOS and kstars and restart, so that the driver gets loaded
 
+### Notes on Stellarmate 2.0
 
+Since Stellarmate 2.0 uses kstars in a flatpak environment many things are different
+
+#### pyfirmata
+
+we have to install pip into the kstars flatpak:
+
+```bash
+cd ; git clone https://github.com/tino/pyFirmata.git
+flatpak run --command=sh org.kde.kstars -c "python3 -m ensurepip --user"
+flatpak run --command=sh org.kde.kstars -c "cd ~/pyFirmata && python3 -m pip install --user ."
+```
+
+for convenience I have provided a script `install-flatpak.sh`
+
+just in the root of this project start
+
+```bash
+./install-flatpak.sh
+```
 
 ### Usage
 

@@ -24,8 +24,27 @@
 #include "arduino_cap.h"
 #include <memory>
 #include <string>
+#include <iostream>
+#include <unistd.h>
+
+using namespace std;
 
 #define CALIB_TAB "Calibrate"
+
+static std::string getServoScriptPath()
+{
+    cout << "Checking for arduino_servo.py script path." << endl;
+    if (access("/app/usr/bin/arduino_servo.py", X_OK) == 0){
+        cout << "Found arduino_servo.py script in /app/usr/bin/" << endl;
+        return "/app/usr/bin/arduino_servo.py";
+    } else if (access("/app/bin/arduino_servo.py", X_OK) == 0){
+        cout << "Found arduino_servo.py script in /app/bin/" << endl;
+        return "/app/bin/arduino_servo.py";
+    } else {
+        cout << "Using default arduino_servo.py script path /usr/bin/" << endl;
+    }
+    return "/usr/bin/arduino_servo.py";
+}
 
 // We declare an auto pointer to ArduinoCap.
 std::unique_ptr<ArduinoCap> arduino_cap(new ArduinoCap());
@@ -549,11 +568,11 @@ bool ArduinoCap::DoMove()
         if (!isMoveStep)
         {
             // Servo move cmd string
-            std::string cmd = "/usr/bin/arduino_servo.py "
-                + usbComDev 
+            std::string cmd = getServoScriptPath() + " "
+                + usbComDev
                 + " "
                 + std::to_string(static_cast<int>(servoID))
-                + " " 
+                + " "
                 + std::to_string(static_cast<int>(moveToABS))
                 + " "
                 + std::to_string(static_cast<int>(servoIs))
@@ -579,11 +598,11 @@ bool ArduinoCap::DoMove()
         else
         {
             // Servo move cmd string
-            std::string cmd = "/usr/bin/arduino_servo.py "
-                + usbComDev 
+            std::string cmd = getServoScriptPath() + " "
+                + usbComDev
                 + " "
                 + std::to_string(static_cast<int>(servoID))
-                + " " 
+                + " "
                 + std::to_string(static_cast<int>(moveToABS))
                 + " "
                 + std::to_string(static_cast<int>(moveToABS))
@@ -661,11 +680,11 @@ bool ArduinoCap::DoMove2()
         if (!isMoveStep)
         {
             // Servo move cmd string
-            std::string cmd = "/usr/bin/arduino_servo.py "
-                + usbComDev 
+            std::string cmd = getServoScriptPath() + " "
+                + usbComDev
                 + " "
                 + std::to_string(static_cast<int>(servoID))
-                + " " 
+                + " "
                 + std::to_string(static_cast<int>(moveToABS2))
                 + " "
                 + std::to_string(static_cast<int>(servoIs))
@@ -691,11 +710,11 @@ bool ArduinoCap::DoMove2()
         else
         {
             // Servo move cmd string
-            std::string cmd = "/usr/bin/arduino_servo.py "
-                + usbComDev 
+            std::string cmd = getServoScriptPath() + " "
+                + usbComDev
                 + " "
                 + std::to_string(static_cast<int>(servoID))
-                + " " 
+                + " "
                 + std::to_string(static_cast<int>(moveToABS2))
                 + " "
                 + std::to_string(static_cast<int>(moveToABS2))
